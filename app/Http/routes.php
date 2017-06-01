@@ -16,5 +16,5 @@ Route::get('/', function () {
 });
 
 
-Route::get('/test/{id}', 'MapController@showInfo');
-Route::post('/post', 'MapController@store');
+Route::get('/allInfo', 'MapController@allInfo');
+Route::post('/addData', 'MapController@addData');

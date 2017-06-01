@@ -8,31 +8,27 @@ use Illuminate\Http\Request;
 
 class MapController extends Controller {
     
-    public function showInfo($id) {
-        $arr = array('id' => $id);
+    public function allInfo() {
+
+        $result = \DB::select('select * from dodgers where ?',[1]);
         
-        return response()->json($arr);
+        return response()->json($result);
     
     }
 
-    public function store(Request $req) {
-        $arr = array('id' => $req->input('id'));
-        
-        return response()->json($arr);
+    public function addData(Request $req) {
+        try {
+            
+            \DB::table('dodgers')->insert($req->all());
+            return response()->json(['state' => true]);
+        } catch(\Illuminate\Database\QueryException $ex) {
+
+            return response()->json(['state' => false, 'massage' =>$ex->getMessage()]);
+        }
     
     }
 
 
 
 }
-
-
-
-
-
-
-
-
-
-
 ?>
