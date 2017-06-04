@@ -28,7 +28,27 @@ class MapController extends Controller {
     
     }
 
+    public function findRoad($city,$town) {
+        $result = $this->list2array(\DB::table('road')->where('city','=',$city)->where('town', 'LIKE', '%'.$town)->lists('road'));
 
+
+        return response()->json($result);
+
+    
+    }
+
+    public function findTown($city) {
+        $result = $this->list2array(\DB::table('road')->groupBy('town')->where('city','=',$city)->lists('town'));
+
+         
+        return response()->json($result);
+
+    
+    }
+
+    private function list2array($lists) {
+        return json_decode(json_encode($lists),true);
+    }
 
 }
 ?>

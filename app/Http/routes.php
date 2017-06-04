@@ -16,5 +16,11 @@ Route::get('/', function () {
 });
 
 
+
+Route::post('/auth','UserController@auth');
+
 Route::get('/allInfo', 'MapController@allInfo');
 Route::post('/addData', 'MapController@addData');
+
+Route::get('/findRoad/{city}/{town}', 'MapController@findRoad');
+Route::get('/findTown/{city}/', 'MapController@findTown');
