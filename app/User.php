@@ -1,7 +1,6 @@
 <?php
 
 namespace App;
-use App\Exceptions\NotFoundmonException;
 
 class User {
     
@@ -19,6 +18,24 @@ class User {
     public function isLogged() {
         return $this->islogin;
     }
+    
+    public static function create($req) {
+        
+        try { 
+            
+            $arr = $req->all();
+            $arr['password'] = password_hash($arr['password'],PASSWORD_DEFAULT);
+            $arr['type'] = '2';
+
+           \DB::table('user')->insert($arr);
+        } catch(\Illuminate\Database\QueryException $ex) {
+            
+            return ['state' => false, 'msg' => $ex];
+        
+        }
+
+       return ['state' => true];
+    }   
 
      
     private function auth($account, $password) {

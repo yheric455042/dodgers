@@ -8,17 +8,21 @@ use App\User;
 
 class UserController extends Controller {
 
-    protected $user;
     
-
-
     public function auth(Request $req) {
-        $this->user = new User($req);
+        $user = new User($req);
         
-        $response = $this->user->isLogged() ? ['state' =>true] : ['state'=>false,'mes'=> 'user not found'];
+        $response = $user->isLogged() ? ['state' =>true] : ['state'=>false,'msg'=> 'user not found'];
         
         return response()->json($response);
     }
+
+    public function createUser(Request $req) {
+        
+        return response()->json(User::create($req));
+
+    }
+    
 
 
 }

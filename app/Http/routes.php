@@ -18,8 +18,10 @@ Route::get('/', function () {
 
 
 Route::post('/auth','UserController@auth');
+Route::post('/createUser','UserController@createUser');
 
 Route::get('/allInfo', 'MapController@allInfo');
+Route::get('/getInfo/{lat}/{lng}/{distance}', 'MapController@getInfo');
 Route::post('/addData', 'MapController@addData');
 
 Route::get('/findRoad/{city}/{town}', 'MapController@findRoad');
