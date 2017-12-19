@@ -8,9 +8,10 @@ use Illuminate\Http\Request;
 
 class MapController extends Controller {
     
+     
     public function allInfo() {
 
-        $results = \DB::select('select longitude, latitude, address, type  from dodgers where ?',[1]);
+        $results = \DB::table('dodgers')->join('user', 'user.account', '=', 'dodgers.account')->select('user.name', 'dodgers.longitude', 'dodgers.latitude', 'dodgers.address', 'dodgers.type')->get();
         
         return response()->json($results);
     
@@ -19,8 +20,7 @@ class MapController extends Controller {
     public function getInfo($lat, $lng, $distance) {
 
         $arr = [];
-        $results = \DB::table('dodgers')->select('longitude', 'latitude', 'address', 'type')->get();
-
+        $results = \DB::table('dodgers')->join('user', 'user.account', '=', 'dodgers.account')->select('user.name', 'dodgers.longitude', 'dodgers.latitude', 'dodgers.address', 'dodgers.type')->get();
         
         foreach($results as $result) {
             $dis = abs(floatval($result->latitude) - floatval($lat)) > abs(floatval($result->longitude) - floatval($lng)) ? abs(floatval($result->latitude) - floatval($lat)) : abs(floatval($result->longitude) - floatval($lng));
@@ -33,8 +33,13 @@ class MapController extends Controller {
     }
 
     public function addData(Request $req) {
+        $arr = $req->all();
+
+        if(!\App\User::verifyUser($arr['token'])) {
+            return ['state' => false, 'msg' => 'noLogin'];
+        }
+
         try {
-            $arr = $req->all();
             
             if(!isset($arr['address'])) {
                 $arr['address'] = $this->coordinate2address($arr['latitude'], $arr['longitude']);
@@ -44,13 +49,14 @@ class MapController extends Controller {
                 $arr['latitude'] = $result['lat'];
                 $arr['longitude'] = $result['lng'];
             }
+            
             $arr['timestamp'] = time(); 
-
-
+            $arr['account'] = \DB::table('user')->select('account')->where('token', '=', $arr['token'])->first()->account;
+            unset($arr['token']);
             $destination = $this->returnQueryArr(\DB::table('dodgers')->select('latitude', 'longitude')->get());
 
             $istoonear = $this->istoonear($arr['latitude'], $arr['longitude'], $destination);
-            
+             
             !$istoonear && \DB::table('dodgers')->insert($arr);
             
             $res = ['state' => !$istoonear];
@@ -61,7 +67,7 @@ class MapController extends Controller {
 
         } catch(\Illuminate\Database\QueryException $ex) {
 
-            return response()->json(['state' => false, 'massage' =>$ex->getMessage()]);
+            return response()->json(['state' => false, 'msg' =>$ex->getMessage()]);
         }
     
     }
@@ -101,6 +107,11 @@ class MapController extends Controller {
 
     private function address2coordinate($address) {
         $val = json_decode(file_get_contents("https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=AIzaSyC5m5vVvBfhJb6v_3gX1u_TLw56hKYe-Gc"), true);
+        
+        if($val['status'] === 'ZERO_RESULTS') {
+            return false;
+        }
+
         $lat = $val['results'][0]['geometry']['location']['lat']; 
         $lng = $val['results'][0]['geometry']['location']['lng']; 
         
@@ -117,7 +128,6 @@ class MapController extends Controller {
     }
 
     private function istoonear($lat, $lng ,$destinationArr) {
-        $str = '';
         
         if(count($destinationArr) == 0) {
             
@@ -125,20 +135,16 @@ class MapController extends Controller {
         }
 
         foreach($destinationArr as $destination) {
-            $str .= $destination['latitude'].'%2C'.$destination['longitude'].'%7C';
-        }
-        
-        $str = substr($str,0,-3);
-
-
-        $val = json_decode(file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=$lat%2C$lng&destinations=$str&key=AIzaSyC5m5vVvBfhJb6v_3gX1u_TLw56hKYe-Gc"), true);
-        
-        foreach($val['rows'][0]['elements'] as $dis) {
-            if($dis['distance']['value'] < 100) {
+            $dis = abs(floatval($destination['latitude']) - floatval($lat)) > abs(floatval($destination['longitude']) - floatval($lng)) ? abs(floatval($destination['latitude']) - floatval($lat)) : abs(floatval($destination['longitude']) - floatval($lng));
+            
+            if($dis <= 0.00900900901 * 0.15) {
                 
                 return true;
             }
+        
+
         }
+        
         
         return false; 
     

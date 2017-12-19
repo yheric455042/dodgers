@@ -19,6 +19,8 @@ Route::get('/', function () {
 
 Route::post('/auth','UserController@auth');
 Route::post('/createUser','UserController@createUser');
+Route::get('/verifytoken/{token}','UserController@verifyToken');
+Route::post('/logout','UserController@logout');
 
 Route::get('/allInfo', 'MapController@allInfo');
 Route::get('/getInfo/{lat}/{lng}/{distance}', 'MapController@getInfo');
